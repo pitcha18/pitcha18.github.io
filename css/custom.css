@@ -1,0 +1,73 @@
+.bg-dark {
+    background-color: #010101 !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    font-size: 24px;
+    padding-left: 15px;
+    padding-right: 15px;
+    color: rgba(255, 255, 255, 1);
+}
+
+.navbar-dark .navbar-brand {
+    font-size: 30px;
+    font-weight: bold;
+}
+
+section.header{
+    background: url('../assets/images/bg_header.png');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+}
+
+section.header .header-content .container{
+    height: 90vh;
+}
+
+.head-content{
+    width: 600px;
+    color: #fff;
+}
+
+.head-content h1{
+    font-size: 60px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.head-content button{
+    background-color: #EC5B1B;
+    border: none;
+    padding: 10px 24px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #fff;
+    border-radius: 30px;
+    margin-top: 20px;
+}
+
+.customizable{
+    margin-top: 80px;
+    color: #EC5B1B;
+}
+
+.madeorder{
+    height: 650px;
+    background: url('../assets/images/MadeWithFish.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    opacity: 0.8;
+    font-size: 40px;
+    color: #fff;
+}
+
+.madeorder h1{
+    width: 500px;
+}
+
+.btn-download {
+    border-radius: 30px;
+    border: 3px solid #F5F5F5;
+    background: #E75201;
+}
