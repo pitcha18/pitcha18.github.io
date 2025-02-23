@@ -64,46 +64,49 @@ export default function ElevatorGame() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 md:p-6">
+      {/* ส่วนเริ่มต้นของเกม */}
       {!started && !gameFinished ? (
         targetFloor === null ? (
           <button
             onClick={handleStart}
-            className="px-16 py-8 text-6xl font-bold text-white bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition-all"
+            className="w-full max-w-md px-8 py-6 text-4xl md:text-5xl font-bold text-white bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition-all"
           >
             Start
           </button>
         ) : (
           <div className="flex flex-col items-center">
-            <h2 className="mb-8 text-7xl font-semibold text-red-600">
+            <h2 className="mb-6 text-5xl md:text-6xl font-semibold text-red-600">
               Floor {targetFloor}
             </h2>
             <button
               onClick={confirmStart}
-              className="px-10 py-6 text-5xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
+              className="w-full max-w-md px-6 py-5 text-3xl md:text-4xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
             >
               Start Game
             </button>
           </div>
         )
       ) : gameFinished ? (
-        <div className="mt-4 text-4xl font-semibold text-gray-700 text-center">
-          <h3 className="mb-6 text-5xl font-semibold text-red-600">Game Over</h3>
+        // ส่วนจบเกม
+        <div className="mt-4 text-center">
+          <h3 className="mb-4 text-4xl md:text-5xl font-semibold text-red-600">Game Over</h3>
           <button
             onClick={() => window.location.reload()}
-            className="mt-8 px-10 py-6 text-5xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
+            className="w-full max-w-md px-8 py-6 text-4xl md:text-5xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
           >
             Restart
           </button>
         </div>
       ) : (
+        // ส่วนเกมกำลังเล่น: แสดงปุ่มชั้น
         <div className="flex flex-col items-center">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
             {layouts[layoutIndex].map((floor) => (
               <button
                 key={floor}
                 onClick={() => handleFloorClick(floor)}
-                className="w-40 h-40 flex items-center justify-center text-6xl font-bold text-white bg-gray-500 border-8 border-gray-300 rounded-full shadow-xl transition-all duration-200 hover:brightness-125 active:scale-90"
+                className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold text-white bg-gray-500 border-4 border-gray-300 rounded-full shadow-xl transition-all duration-200 hover:brightness-125 active:scale-90"
               >
                 {floor}
               </button>
