@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState} from 'react';
 
-// ฟังก์ชันสร้าง layouts ต่าง ๆ
 const generateLayouts = (): number[][] => {
-  const floors = Array.from({ length: 12 }, (_, i) => i + 1);
   return [
     [...Array(6).keys()].flatMap((i) => [i + 1, i + 7]),
     [...Array(6).keys()].flatMap((i) => [6 - i, 12 - i]),
@@ -13,8 +11,6 @@ const generateLayouts = (): number[][] => {
   ];
 };
 
-// ฟังก์ชันส่งข้อมูลไป Google Sheet
-// กำหนด times เป็น number[] ชัดเจน
 const sendDataToGoogleSheet = async (times: number[]): Promise<void> => {
   const url = `https://script.google.com/macros/s/AKfycbzKI0EAuzvHhAaEc8hGxT8GqXGUo6UkrrA1quj5RKPpLW7UlA5DFR-ClJwFSrPMHmphvw/exec?times=${encodeURIComponent(
     JSON.stringify(times)

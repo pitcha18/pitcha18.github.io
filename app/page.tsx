@@ -1,4 +1,3 @@
-import Image from "next/image";
 import ButtonTimer from "./components/ButtonTimer";
 import React from "react";
 
