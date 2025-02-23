@@ -1,45 +1,55 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-const generateLayouts = () => {
+// ฟังก์ชันสร้าง layouts ต่าง ๆ
+const generateLayouts = (): number[][] => {
   const floors = Array.from({ length: 12 }, (_, i) => i + 1);
   return [
-    [...Array(6).keys()].flatMap(i => [i + 1, i + 7]),
-    [...Array(6).keys()].flatMap(i => [6 - i, 12 - i]),
-    [...Array(6).keys()].flatMap(i => [i + 1, 12 - i]),
-    [...Array(6).keys()].flatMap(i => [6 - i, i + 7]),
+    [...Array(6).keys()].flatMap((i) => [i + 1, i + 7]),
+    [...Array(6).keys()].flatMap((i) => [6 - i, 12 - i]),
+    [...Array(6).keys()].flatMap((i) => [i + 1, 12 - i]),
+    [...Array(6).keys()].flatMap((i) => [6 - i, i + 7]),
   ];
 };
 
-const sendDataToGoogleSheet = async (times) => {
-  const url = `https://script.google.com/macros/s/AKfycbzKI0EAuzvHhAaEc8hGxT8GqXGUo6UkrrA1quj5RKPpLW7UlA5DFR-ClJwFSrPMHmphvw/exec?times=${encodeURIComponent(JSON.stringify(times))}`;
-  
-  const response = await fetch(url, { method: "GET" });
+// ฟังก์ชันส่งข้อมูลไป Google Sheet
+// กำหนด times เป็น number[] ชัดเจน
+const sendDataToGoogleSheet = async (times: number[]): Promise<void> => {
+  const url = `https://script.google.com/macros/s/AKfycbzKI0EAuzvHhAaEc8hGxT8GqXGUo6UkrrA1quj5RKPpLW7UlA5DFR-ClJwFSrPMHmphvw/exec?times=${encodeURIComponent(
+    JSON.stringify(times)
+  )}`;
+
+  const response = await fetch(url, { method: 'GET' });
   if (response.ok) {
-    console.log("Data saved successfully!");
+    console.log('Data saved successfully!');
   } else {
-    console.error("Failed to save data.");
+    console.error('Failed to save data.');
   }
 };
 
 export default function ElevatorGame() {
-  const [started, setStarted] = useState(false);
-  const [targetFloor, setTargetFloor] = useState(null);
-  const [startTime, setStartTime] = useState(null);
-  const [elapsedTimes, setElapsedTimes] = useState([]);
-  const [layoutIndex, setLayoutIndex] = useState(0);
-  const [gameFinished, setGameFinished] = useState(false);
-  const [usedFloors, setUsedFloors] = useState([]);
-  const layouts = generateLayouts();
+  // กำหนดชนิดของ State ให้ชัดเจน
+  const [started, setStarted] = useState<boolean>(false);
+  const [targetFloor, setTargetFloor] = useState<number | null>(null);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedTimes, setElapsedTimes] = useState<number[]>([]);
+  const [layoutIndex, setLayoutIndex] = useState<number>(0);
+  const [gameFinished, setGameFinished] = useState<boolean>(false);
+  const [usedFloors, setUsedFloors] = useState<number[]>([]);
+  const layouts: number[][] = generateLayouts();
 
-  const getRandomFloor = () => {
-    const availableFloors = layouts[layoutIndex].filter(floor => !usedFloors.includes(floor));
+  // ดึงเลขชั้นแบบสุ่มจาก layouts ที่ยังไม่ได้ใช้
+  const getRandomFloor = (): number | null => {
+    const availableFloors = layouts[layoutIndex].filter(
+      (floor) => !usedFloors.includes(floor)
+    );
     if (availableFloors.length === 0) return null;
     return availableFloors[Math.floor(Math.random() * availableFloors.length)];
   };
 
-  const handleStart = () => {
+  // ฟังก์ชันเริ่มเกม: หาชั้นใหม่ ถ้าเจอให้ setTargetFloor
+  const handleStart = (): void => {
     if (layoutIndex >= layouts.length) {
       setGameFinished(true);
       setStarted(false);
@@ -51,21 +61,26 @@ export default function ElevatorGame() {
     }
   };
 
-  const confirmStart = () => {
-    setStarted(true);
-    setUsedFloors(prev => [...prev, targetFloor]);
-    setStartTime(Date.now());
+  // ยืนยันการเริ่ม (เมื่อกด Start Game)
+  const confirmStart = (): void => {
+    if (targetFloor !== null) {
+      setStarted(true);
+      setUsedFloors((prev) => [...prev, targetFloor]);
+      setStartTime(Date.now());
+    }
   };
 
-  const handleFloorClick = (floor) => {
+  // ฟังก์ชันเมื่อกดปุ่มชั้น
+  const handleFloorClick = (floor: number): void => {
+    // เช็คว่าชั้นที่กดตรงกับเป้าหมาย + มี startTime แล้วหรือไม่
     if (floor === targetFloor && startTime !== null) {
       const timeTaken = (Date.now() - startTime) / 1000;
-      setElapsedTimes(prev => [...prev, timeTaken]);
+      setElapsedTimes((prev) => [...prev, timeTaken]);
       setStarted(false);
-      
+
       if (layoutIndex < layouts.length - 1) {
         setTimeout(() => {
-          setLayoutIndex(prev => prev + 1);
+          setLayoutIndex((prev) => prev + 1);
           setUsedFloors([]);
           handleStart();
         }, 1000);
@@ -75,7 +90,8 @@ export default function ElevatorGame() {
     }
   };
 
-  const handleRestart = () => {
+  // ฟังก์ชันรีสตาร์ทเกม
+  const handleRestart = (): void => {
     sendDataToGoogleSheet(elapsedTimes);
     setElapsedTimes([]);
     setLayoutIndex(0);
@@ -87,8 +103,10 @@ export default function ElevatorGame() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      {/* ถ้าเกมยังไม่เริ่มและยังไม่จบ */}
       {!started && !gameFinished ? (
         targetFloor === null ? (
+          // ถ้าไม่มี targetFloor ให้กดปุ่ม Start
           <button
             onClick={handleStart}
             className="px-10 py-6 text-5xl font-bold text-white bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition-all"
@@ -96,6 +114,7 @@ export default function ElevatorGame() {
             Start
           </button>
         ) : (
+          // ถ้ามี targetFloor แล้ว ให้ยืนยันเริ่มเกม
           <div className="flex flex-col items-center">
             <h2 className="mb-10 text-6xl font-semibold text-red-600">
               Floor {targetFloor}
@@ -109,12 +128,16 @@ export default function ElevatorGame() {
           </div>
         )
       ) : gameFinished ? (
+        // ถ้าเกมจบแล้ว
         <div className="mt-4 text-3xl font-semibold text-gray-700">
           <h3 className="mb-4 text-4xl font-semibold text-red-600">
             Final Results 
           </h3>
+          {/* แสดงเวลาที่ใช้ในแต่ละ pattern */}
           {elapsedTimes.map((time, index) => (
-            <p key={index}>Pattern {index + 1} : {time.toFixed(3)} sec</p>
+            <p key={index}>
+              Pattern {index + 1} : {time.toFixed(3)} sec
+            </p>
           ))}
           <button
             onClick={handleRestart}
@@ -124,6 +147,7 @@ export default function ElevatorGame() {
           </button>
         </div>
       ) : (
+        // เมื่อเกมเริ่มแล้ว
         <div className="flex flex-col items-center">
           <div className="grid grid-cols-2 gap-4">
             {layouts[layoutIndex].map((floor) => (
@@ -140,7 +164,7 @@ export default function ElevatorGame() {
                   hover:brightness-125 hover:shadow-xl
                   active:scale-90 active:shadow-inner active:bg-gray-300
                 "
-                >
+              >
                 {floor}
               </button>
             ))}
