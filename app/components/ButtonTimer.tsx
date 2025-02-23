@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState} from 'react';
 
 const generateLayouts = (): number[][] => {
   return [
@@ -11,23 +11,40 @@ const generateLayouts = (): number[][] => {
   ];
 };
 
+const sendDataToGoogleSheet = async (times: number[]): Promise<void> => {
+  const url = `https://script.google.com/macros/s/AKfycbzKI0EAuzvHhAaEc8hGxT8GqXGUo6UkrrA1quj5RKPpLW7UlA5DFR-ClJwFSrPMHmphvw/exec?times=${encodeURIComponent(
+    JSON.stringify(times)
+  )}`;
+
+  const response = await fetch(url, { method: 'GET' });
+  if (response.ok) {
+    console.log('Data saved successfully!');
+  } else {
+    console.error('Failed to save data.');
+  }
+};
+
 export default function ElevatorGame() {
-  const [started, setStarted] = useState(false);
+  // กำหนดชนิดของ State ให้ชัดเจน
+  const [started, setStarted] = useState<boolean>(false);
   const [targetFloor, setTargetFloor] = useState<number | null>(null);
-  const [layoutIndex, setLayoutIndex] = useState(0);
-  const [gameFinished, setGameFinished] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const [elapsedTimes, setElapsedTimes] = useState<number[]>([]);
+  const [layoutIndex, setLayoutIndex] = useState<number>(0);
+  const [gameFinished, setGameFinished] = useState<boolean>(false);
   const [usedFloors, setUsedFloors] = useState<number[]>([]);
   const layouts: number[][] = generateLayouts();
 
+  // ดึงเลขชั้นแบบสุ่มจาก layouts ที่ยังไม่ได้ใช้
   const getRandomFloor = (): number | null => {
     const availableFloors = layouts[layoutIndex].filter(
       (floor) => !usedFloors.includes(floor)
     );
-    return availableFloors.length === 0
-      ? null
-      : availableFloors[Math.floor(Math.random() * availableFloors.length)];
+    if (availableFloors.length === 0) return null;
+    return availableFloors[Math.floor(Math.random() * availableFloors.length)];
   };
 
+  // ฟังก์ชันเริ่มเกม: หาชั้นใหม่ ถ้าเจอให้ setTargetFloor
   const handleStart = (): void => {
     if (layoutIndex >= layouts.length) {
       setGameFinished(true);
@@ -40,15 +57,21 @@ export default function ElevatorGame() {
     }
   };
 
+  // ยืนยันการเริ่ม (เมื่อกด Start Game)
   const confirmStart = (): void => {
     if (targetFloor !== null) {
       setStarted(true);
       setUsedFloors((prev) => [...prev, targetFloor]);
+      setStartTime(Date.now());
     }
   };
 
+  // ฟังก์ชันเมื่อกดปุ่มชั้น
   const handleFloorClick = (floor: number): void => {
-    if (floor === targetFloor) {
+    // เช็คว่าชั้นที่กดตรงกับเป้าหมาย + มี startTime แล้วหรือไม่
+    if (floor === targetFloor && startTime !== null) {
+      const timeTaken = (Date.now() - startTime) / 1000;
+      setElapsedTimes((prev) => [...prev, timeTaken]);
       setStarted(false);
 
       if (layoutIndex < layouts.length - 1) {
@@ -63,50 +86,80 @@ export default function ElevatorGame() {
     }
   };
 
+  // ฟังก์ชันรีสตาร์ทเกม
+  const handleRestart = (): void => {
+    sendDataToGoogleSheet(elapsedTimes);
+    setElapsedTimes([]);
+    setLayoutIndex(0);
+    setUsedFloors([]);
+    setGameFinished(false);
+    setStarted(false);
+    handleStart();
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4 md:p-6">
-      {/* ส่วนเริ่มต้นของเกม */}
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      {/* ถ้าเกมยังไม่เริ่มและยังไม่จบ */}
       {!started && !gameFinished ? (
         targetFloor === null ? (
+          // ถ้าไม่มี targetFloor ให้กดปุ่ม Start
           <button
             onClick={handleStart}
-            className="w-full max-w-md px-8 py-6 text-4xl md:text-5xl font-bold text-white bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition-all"
+            className="px-10 py-6 text-5xl font-bold text-white bg-green-500 rounded-full shadow-lg hover:bg-green-600 transition-all"
           >
             Start
           </button>
         ) : (
+          // ถ้ามี targetFloor แล้ว ให้ยืนยันเริ่มเกม
           <div className="flex flex-col items-center">
-            <h2 className="mb-6 text-5xl md:text-6xl font-semibold text-red-600">
+            <h2 className="mb-10 text-6xl font-semibold text-red-600">
               Floor {targetFloor}
             </h2>
             <button
               onClick={confirmStart}
-              className="w-full max-w-md px-6 py-5 text-3xl md:text-4xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
+              className="px-8 py-5 text-4xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
             >
               Start Game
             </button>
           </div>
         )
       ) : gameFinished ? (
-        // ส่วนจบเกม
-        <div className="mt-4 text-center">
-          <h3 className="mb-4 text-4xl md:text-5xl font-semibold text-red-600">Game Over</h3>
+        // ถ้าเกมจบแล้ว
+        <div className="mt-4 text-3xl font-semibold text-gray-700">
+          <h3 className="mb-4 text-4xl font-semibold text-red-600">
+            Final Results 
+          </h3>
+          {/* แสดงเวลาที่ใช้ในแต่ละ pattern */}
+          {elapsedTimes.map((time, index) => (
+            <p key={index}>
+              Pattern {index + 1} : {time.toFixed(3)} sec
+            </p>
+          ))}
           <button
-            onClick={() => window.location.reload()}
-            className="w-full max-w-md px-8 py-6 text-4xl md:text-5xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
+            onClick={handleRestart}
+            className="mt-10 px-8 py-5 text-4xl font-bold text-white bg-blue-500 rounded-full shadow-lg hover:bg-blue-600 transition-all"
           >
             Restart
           </button>
         </div>
       ) : (
-        // ส่วนเกมกำลังเล่น: แสดงปุ่มชั้น
+        // เมื่อเกมเริ่มแล้ว
         <div className="flex flex-col items-center">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 gap-4">
             {layouts[layoutIndex].map((floor) => (
               <button
                 key={floor}
                 onClick={() => handleFloorClick(floor)}
-                className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 lg:w-32 lg:h-32 flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold text-white bg-gray-500 border-4 border-gray-300 rounded-full shadow-xl transition-all duration-200 hover:brightness-125 active:scale-90"
+                className="
+                  w-32 h-32
+                  flex items-center justify-center
+                  text-5xl font-bold text-gray-50
+                  bg-gray-400 border-8 border-gray-300
+                  rounded-full shadow-xl
+                  transition-all duration-200
+                  hover:brightness-125 hover:shadow-xl
+                  active:scale-90 active:shadow-inner active:bg-gray-300
+                "
               >
                 {floor}
               </button>
