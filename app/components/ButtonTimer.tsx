@@ -154,7 +154,7 @@ export default function ElevatorGame() {
                   w-32 h-32
                   flex items-center justify-center
                   text-5xl font-bold text-gray-50
-                  bg-gray-400 border-8 border-gray-300
+                  bg-gray-500 border-8 border-gray-400
                   rounded-full shadow-xl
                   transition-all duration-200
                   hover:brightness-125 hover:shadow-xl
